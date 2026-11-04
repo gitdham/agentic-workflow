@@ -1,0 +1,16 @@
+{
+	"$schema": "https://raw.githubusercontent.com/can1357/oh-my-pi/main/packages/coding-agent/src/config/mcp-schema.json",
+	"mcpServers": {
+		"touchdesigner": {
+			"type": "stdio",
+			"command": "npx",
+			"args": [
+				"-y",
+				"touchdesigner-mcp-server@2.2.0",
+				"--host=http://127.0.0.1",
+				"--port=9981"
+			],
+			"timeout": 120000
+		}
+	}
+}
