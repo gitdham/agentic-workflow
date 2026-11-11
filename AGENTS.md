@@ -5,13 +5,22 @@ This directory is an orchestration workspace containing the root repository and,
 ## Layout
 
 - `AGENTS.md`: workspace guidance.
-- `INBOX.md`: decisions that need the user. It is not memory.
+- `INBOX.md`: held decisions for the user; Git-ignored and untracked; see `## INBOX rules`.
 - `.memory/MEMORY.md`: root-level memory for cross-repository and workflow learnings.
 - `.omp/agents/planner.md`: task-scoped planner definition.
 - `plans/`: optional gitignored in-flight planner output.
 - `LOCAL.md`: optional Git-excluded machine-specific notes and repository inventory. Main and planners read it for routing when present; never track it.
 
 Nested repositories live wherever the user places them under the workspace root. Each is its own Git repository with its own `AGENTS.md` and is kept out of the root repository through local `.git/info/exclude` rules, not tracked configuration.
+
+## INBOX rules
+
+- `INBOX.md` holds only decisions held for the user. Each item is one question with options and a recommendation when known.
+- Reports, status, history, verification detail, and items that merely wait on a user trigger do not belong in `INBOX.md`. They go to the final report, a repository's `AGENTS.md` or docs, memory (only verified reusable learnings), or Git.
+- Remove an item as soon as the user answers. If the answer matters later, record it in its proper place, not in `INBOX.md`.
+- When nothing is held, `INBOX.md` says `No held decisions.`
+- Keep items short; no long status lines. Facts must be evidence-backed; mark unverified ones.
+- Only an assigned worker edits `INBOX.md`; Main decides the content. Single writer at a time.
 
 ## Orchestrator protocol
 
@@ -32,6 +41,7 @@ Only an explicit user request for a specifically named, non-development administ
 
 - Memory stays inside this workspace. NEVER write to global or user-level memory stores, and NEVER install a memory plugin or enable a memory backend.
 - When a delegated executor is assigned or required to commit, it commits inside the affected repository's own Git repository. An executor changing files in a nested repository never stages or commits those files in the root repository. This does not authorize Main to stage or commit.
+- Both nested repositories `products/paint-reactive-2` and `products/irkar-demo` stay local: never push unless the user asks.
 
 ## Command Execution: Always Use RTK Proxy
 
@@ -139,3 +149,15 @@ Main sets user intent and outcome/ownership constraints; the planner authors tas
 - Create dedicated acceptance-evidence artifacts only when genuinely required by repository policy or explicitly requested; otherwise include observed results in the final report. Main authorizes and scopes any required artifact; an assigned worker creates or updates it, while the planner coordinates and validates as appropriate. Do not alter unrelated or pre-existing artifacts.
 - The planner's verdict is `ACCEPT`, `REJECT`, or `BLOCKED`. `ACCEPT` requires every required acceptance check to pass and demonstrate the contract outcomes; a worker signal is not a verdict.
 - The final report states what changed per affected repository or workspace area, which actor ran which checks and their actual results, any failed or corrected attempts, blockers and unverified work, and decisions needed. List worker-reported changed files without implying every file was personally inspected. Mention that planner-led validation is not independent design critique when relevant.
+
+## Writing AGENTS.md
+
+Agents read every `AGENTS.md` on every task, so keep each file a small, current operating manual for its repository.
+
+- Keep only what an agent needs on every task in that repository: purpose in two or three lines, how to run and verify, hard rules and invariants, and a docs map. Budget: at most 150 lines and 10 KB per file.
+- Write only what cannot be derived from the repository or would otherwise be rediscovered each session; do not list files, node trees, tables or commands already available in code or tools.
+- Put architecture and reference material in `docs/`, linked with one line saying when to read it; every fact has one source of truth, so link instead of copying.
+- Keep measurements, verification results, dates, hashes or SHAs and "latest save" facts out of `AGENTS.md`; put them in reports, Git or `docs/`.
+- Record evidence-backed gotchas in `.memory`; keep only the resulting one-line rule in `AGENTS.md`.
+- Do not repeat root rules in nested `AGENTS.md` files; write every rule imperatively and verifiably, and turn absolute prohibitions into checks or tests where possible.
+- Before finishing any change that grows an `AGENTS.md`, check its budget and move the excess to `docs/` in the same change.
