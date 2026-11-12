@@ -134,3 +134,52 @@ Cross-repository and workflow learnings. Format: finding, conditions, evidence, 
 - **Conditions:** expanding a `.toe` on this workstation, including when a separate target directory is passed.
 - **Evidence:** during verification of the `.63` save on 2026-11-10 a worker found `*.toe.dir`/`*.toc` created in the project folder instead of the requested target, and cleaned them up.
 - **Implication:** copy the `.toe` out of the repository and expand that copy; otherwise `*.toe.dir`/`*.toc` appear in the project folder.
+
+## Editing DAT-synced files read as UTF-8 stacks BOMs
+
+- **Finding:** reading a DAT-synced file as `utf-8` instead of `utf-8-sig` and then writing it back stacks BOMs and breaks GLSL compilation.
+- **Conditions:** editing a script or shader file that TD syncs to a DAT on Windows; see "TouchDesigner DAT-synced files are written with CRLF".
+- **Evidence:** worker observation during the A1 curtain work, 2026-11-11.
+- **Implication:** read with `utf-8-sig`, remove the BOM, and write with `newline=''` (LF) before TD re-syncs.
+
+## TouchDesigner Feedback TOP wiring probe can hang the process permanently
+
+- **Finding:** a live MCP Python probe that disconnects and reconnects a Feedback TOP's input and then calls `dependenciesTo` on that loop can hang TouchDesigner permanently: all threads suspended, no dialog, `Responding=False`; only killing the process recovers it.
+- **Conditions:** probing feedback wiring live through the MCP bridge in TD 2025.33070.
+- **Evidence:** happened during the damage trail work in `products/paint-reactive-2` on 2026-11-11.
+- **Implication:** never touch feedback wiring from live probes; save before risky experiments; after a kill, reopen the saved `.toe` and confirm the bridge is still loopback-only at `127.0.0.1:9981`.
+
+## Time expressions inside a Feedback TOP loop lock it to 60 cooks/s
+
+- **Finding:** parameter expressions that read time (`absTime`, `simctl`) on nodes inside a Feedback TOP loop can lock the loop into cooking 60 times/s with a `Cook dependency loop` warning after the output window is closed.
+- **Conditions:** TD 2025.33070, feedback cycles containing time-driven parameter expressions; related to "Diagnostic Info DATs with a viewer cook every frame".
+- **Evidence:** observed during the damage trail work in `products/paint-reactive-2` on 2026-11-11.
+- **Implication:** generate the clock in a small TOP outside the loop and feed it in, as the water flow does; do not put time expressions on nodes inside a feedback loop.
+
+## Network editor on `/project1/reactive` forces a per-frame pull
+
+- **Finding:** a network editor displaying `/project1/reactive` makes the `stage` tile pull `visual/out1` every frame.
+- **Conditions:** TD 2025.33070 while measuring idle cook; same mechanism as "Diagnostic Info DATs with a viewer cook every frame".
+- **Evidence:** observed during the damage trail work in `products/paint-reactive-2` on 2026-11-11.
+- **Implication:** move the network editor elsewhere before measuring cook activity when the output window is closed.
+
+## Copying feedback-loop nodes can freeze TouchDesigner permanently
+
+- **Finding:** copying the feedback-loop nodes `curtain/field` and `damage_step` to `DEBUG`, then copying evaluated parameter values into the copies, froze TD permanently: all threads suspended, static CPU time, only killing the process recovered. The `damage_step` copy is the likely trigger, but it is not isolated.
+- **Conditions:** TD 2025.33070, live MCP probing of a Feedback TOP loop; same failure class as "TouchDesigner Feedback TOP wiring probe can hang the process permanently".
+- **Evidence:** observed during the curtain knob work in `products/paint-reactive-2` on 2026-11-11.
+- **Implication:** do not copy feedback-loop nodes in a live probe; to test a shader, swap `pixeldat` on the existing node during a normal frame instead.
+
+## `cook(force=True)` on `curtain/field` also re-runs `damage_step`
+
+- **Finding:** `cook(force=True)` on `curtain/field` also re-runs `damage_step`, so an A/B that swaps a shader and force-cooks within one frame changes the damage state instead of comparing two static renders.
+- **Conditions:** TD 2025.33070, the curtain damage-trail chain in `products/paint-reactive-2`.
+- **Evidence:** observed during the curtain knob work on 2026-11-11.
+- **Implication:** compare idle states (`d = 0`) by swapping `pixeldat` across normal frame blocks, not by force-cooking.
+
+## Battery power slows TouchDesigner GPU passes by about 1.9x
+
+- **Finding:** with this laptop on battery, TD's GPU passes ran about 1.9x slower: 16 fps versus about 51 on AC power under the same conditions.
+- **Conditions:** measuring TD render rate on this workstation while unplugged.
+- **Evidence:** the curtain knob work in `products/paint-reactive-2` on 2026-11-11; see also "CPU readings need the right counters" and "TouchDesigner frame counters read 60 fps even when frames are dropped".
+- **Implication:** check `Win32_Battery` status and record power state next to every fps number; measure official or dev fps only on AC power.
