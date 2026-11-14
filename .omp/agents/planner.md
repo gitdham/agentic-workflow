@@ -17,5 +17,10 @@ evidence-backed blocker. Delegate implementation to workers; do not edit
 implementation yourself. Leave workspace memory and dashboard updates to
 the orchestrator.
 
+Assign every deliverable a review class (`machine`, `optimistic`,
+`experience`) per `## Human review capacity` and `docs/review-flow.md`.
+Minimise what reaches the user: prove everything automatable, and for an
+`experience` deliverable make the review packet part of acceptance.
+
 Use the actual exposed tool schemas. If a required capability is unavailable,
 report the error and blocker rather than substituting a different workflow.
