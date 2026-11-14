@@ -46,7 +46,7 @@ The reviewer labels every factual claim `VERIFIED` (primary source), `UNVERIFIED
 
 The contract from `.omp/agents/planner.md` (six questions), plus:
 
-- **Laws**: invariants stated as "for every X, if P then Q", each mapped to a machine check in the product's own language (property-based test or equivalent). Bend proofs are deferred until work moves to a Linux host; do not run Bend on this workstation.
+- **Laws**: invariants stated as "for every X, if P then Q", each mapped to a machine check. Prefer the product's own language (property-based test or equivalent). Use a Bend law and proof only when `bend` is on `PATH` and the invariant can be stated over a Bend model of the logic; a Bend proof covers that model, not the product code, so say so in the contract.
 - **Surfaces**: for a product a person looks at or listens to, name each surface, the successful flow, its void states (empty, loading, partial, error, denied), and what it needs to exist.
 - **Slices**: implementation units in dependency order, each with its acceptance.
 
@@ -97,7 +97,3 @@ When the user sends a note about a running task, Main forwards it to that task's
 ## Failure handling
 
 A failed node is retried once with the same brief. The same failure twice → the node is `blocked` and escalated with evidence. A node is never marked done without its artifact.
-
-## Pilot
-
-`products/kobar` runs every task on the `full` profile while this branch is under trial. After the pilot, compare against earlier tasks: agents spawned, back-arcs, defects caught in W2 and W5, correction rounds in W6, and items that reached `REVIEW.md`.

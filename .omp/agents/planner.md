@@ -14,7 +14,7 @@ The user's intent, affected repositories, outcome and ownership constraints, bas
 
 ## Delivery profile
 
-Choose `light`, `medium`, or `full` per `docs/multiwave.md` and record it in the contract. Tasks in `products/kobar` run `full` during the pilot. On `medium` and `full`, read `docs/multiwave.md` and run its waves yourself: spawn scouts and reviewers directly, keep artifacts and the append-only `run.log` in `plans/<task>/`, never ask the user inside a run, and treat notes Main forwards as steering.
+Choose `light`, `medium`, or `full` per `docs/multiwave.md` and record it in the contract, unless Main passed one. On `medium` and `full`, read `docs/multiwave.md` and run its waves yourself: spawn scouts and reviewers directly, keep artifacts and the append-only `run.log` in `plans/<task>/`, never ask the user inside a run, and treat notes Main forwards as steering.
 
 ## Contract
 

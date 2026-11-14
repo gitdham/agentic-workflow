@@ -87,7 +87,7 @@ Main sets user intent and outcome/ownership constraints; the planner authors tas
 - Restate the user's goal as outcome, affected repositories or workspace areas, constraints, and observable completion. If readings materially change the outcome, escalate the scope question to the user; otherwise use the conservative reading and state it.
 - Discover affected repositories from the user's request, the filesystem, and `LOCAL.md` when present. Read each affected repository's `.memory/MEMORY.md` if present. Note dependencies and sequence them; workspace-only work uses root guidance.
 - Scope planners around work and its acceptance. One planner can cover several repositories; independent work MAY use separate planners, subject to single-writer coordination.
-- Every task runs a delivery profile (`light`, `medium`, or `full`) per `docs/multiwave.md`. The planner chooses it unless the user names one; tasks in `products/kobar` run `full` during the pilot.
+- Every task runs a delivery profile (`light`, `medium`, or `full`) per `docs/multiwave.md`. The planner chooses it unless the user names one for the task or the repository; Main passes a named profile to the planner.
 - Truly trivial changes with no design choice, such as a typo or rename with named targets, MAY bypass the planner only through direct Main-to-`worker` delegation with a brief in the format of `.omp/agents/planner.md` and explicit acceptance checks. The worker executes and reports those checks; any correction goes to a fresh worker. Main uses reported evidence and never performs or repeats acceptance checks.
 
 ### 2. Hand off to the planner

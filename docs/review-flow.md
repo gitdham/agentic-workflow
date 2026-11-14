@@ -12,7 +12,7 @@ Every deliverable gets one class. Ask in order; the first "yes" decides.
 
 Use `experience` only for what automation cannot judge.
 
-Split mixed deliverables. "Gyro aiming" is `machine` for the direction math and tests and `experience` only for how it feels on a real phone; only the second part waits for the user.
+Split mixed deliverables. A new input control is `machine` for its mapping math and tests and `experience` only for how it feels in the hand; only the second part waits for the user.
 
 ## Held decisions
 

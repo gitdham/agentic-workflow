@@ -5,7 +5,7 @@ It keeps orchestration guidance in the root while nested repositories retain the
 
 ## Workflow
 
-Work flows from **Main** to a task-scoped **planner**, then to implementation **workers**.
+Work flows from **Main** to a task-scoped **planner**, then to implementation **workers**. A planner can also run a multiwave profile with scouts and reviewers (`docs/multiwave.md`).
 Main owns user liaison, routing, dependencies, writer coordination, escalation, and the final report.
 The planner defines the contract and acceptance criteria, delegates workers, validates results, and manages corrections.
 Workers edit assigned files and run assigned checks.
@@ -25,8 +25,8 @@ Every shell command is run through `rtk proxy`; native file-reading and editing 
    ```
 
 4. Optionally create an untracked `LOCAL.md` containing machine-specific notes or a repository inventory for routing.
-5. Point the agent runtime at root `AGENTS.md` and `.omp/agents/planner.md`.
-6. Keep repository-specific guidance and optional memory inside each nested repository.
+5. Point the agent runtime at root `AGENTS.md` (Main), `.omp/agents/planner.md`, `.omp/agents/worker.md`, and `.omp/RULES.md` (loaded into every session, including subagents). Open sessions from the root so these are discovered, and restart a session after editing `RULES.md`.
+6. Keep repository-specific guidance and optional memory inside each nested repository. Keep machine-specific notes in the untracked `LOCAL.md`.
 
 `rtk` is required on `PATH` because the workspace policy routes all shell commands through `rtk proxy`.
 Read `AGENTS.md` for the complete role boundaries, delegation contract, signal meanings, acceptance loop, and memory policy.
