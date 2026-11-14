@@ -18,6 +18,8 @@ The planner picks one per task and records it in the contract. A user instructio
 
 All artifacts go to `plans/<task>/` unless stated. The planner spawns every wave agent itself; wave agents do not spawn agents.
 
+Subagents receive no `AGENTS.md` automatically. Every W1 scout and W6 worker brief names the workspace `AGENTS.md`, the affected repository's `AGENTS.md`, and its `.memory/MEMORY.md` if present, to read first. W2 and W5 reviewers get only their input file, so the information boundary holds.
+
 | Wave | Agents | Reads only | Writes |
 |---|---|---|---|
 | W1 Explore | ≥3 `scout`, parallel, one per distinct open question | the intent, repo docs and memory, sources it finds | `w1-<slug>.md` (recorded by the planner from the scout's return) |
