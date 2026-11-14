@@ -10,7 +10,8 @@ This directory is an orchestration workspace containing the root repository and,
 - `docs/review-flow.md`: review packet format and class guidance; read when writing a contract or a `REVIEW.md` item.
 - `.memory/MEMORY.md`: root-level memory for cross-repository and workflow learnings.
 - `.omp/agents/planner.md`: task-scoped planner definition.
-- `plans/`: optional gitignored in-flight planner output.
+- `plans/`: optional gitignored in-flight planner output; multiwave runs keep their artifacts and append-only `run.log` in `plans/<task>/`.
+- `docs/multiwave.md`: delivery profiles and the multiwave pipeline; read when a task runs the `medium` or `full` profile.
 - `LOCAL.md`: optional Git-excluded machine-specific notes and repository inventory. Main and planners read it for routing when present; never track it.
 
 Nested repositories live wherever the user places them under the workspace root. Each is its own Git repository with its own `AGENTS.md` and is kept out of the root repository through local `.git/info/exclude` rules, not tracked configuration.
@@ -44,7 +45,7 @@ The user's attention is the scarcest resource. Schedule work against the user's 
 
 Main is the active control-plane orchestrator/liaison, not a hands-on developer or pair programmer. It actively steers concurrent agent work and user communication.
 
-Main may read `LOCAL.md`, `INBOX.md`, `REVIEW.md`, workspace and repository `AGENTS.md` and `.memory/MEMORY.md` files for routing; agent reports, transcripts, and task status; and only minimal Git coordination facts (`git rev-parse HEAD` and `git status --short`). It may assign and steer agents; own user intent, routing, outcome and ownership contracts, dependencies, single-writer coordination, and escalation; handle genuine user scope decisions; decide whether memory or dashboard updates are needed; and synthesize the final report.
+Main may read `LOCAL.md`, `INBOX.md`, `REVIEW.md`, `plans/*/run.log`, workspace and repository `AGENTS.md` and `.memory/MEMORY.md` files for routing; agent reports, transcripts, and task status; and only minimal Git coordination facts (`git rev-parse HEAD` and `git status --short`). It may assign and steer agents; own user intent, routing, outcome and ownership contracts, dependencies, single-writer coordination, and escalation; handle genuine user scope decisions; decide whether memory or dashboard updates are needed; and synthesize the final report. When the user sends a note about a running task, Main forwards it to that task's planner, which handles it per `docs/multiwave.md`.
 
 By default, Main MUST NOT explore source or code to solve technical tasks, author the task-specific contract, implementation/design plan, or worker brief, edit repository files (including code, docs, plans, memory, or dashboards), install dependencies, run apps, services, migrations, tests, builds, linters, formatters, technical smoke checks, browser verification, or debugging, or stage or commit. Delegate planning and technical design to the planner; workers perform assigned repository mutations and checks; planners validate acceptance.
 
@@ -101,13 +102,14 @@ Main owns user intent, routing, outcome and ownership contracts, dependencies, s
 | Planner | `planner` | `@plan` role | task contract and technical plan/design, requested outcome, WHY, scope, invariants, necessary shared/public constraints, acceptance criteria, direct worker delegation, acceptance validation, and correction |
 | Worker | `task` | `@task` role | implement a slice and perform assigned repository mutations/checks; choose internal HOW using repository conventions |
 
-Main sets user intent and outcome/ownership constraints; the planner authors task-specific WHAT, WHY, scope, invariants, technical plan, and acceptance; the worker owns internal implementation choices. The planner does not implement: workers mutate files. Planner acceptance checks do not grant permission to edit implementation. Planner-led validation determines whether agreed outcomes are demonstrated; it is not independent design critique. Main consumes the evidence and does not perform edits or checks. Use an additional independent review only when specifically requested for a concrete need.
+Main sets user intent and outcome/ownership constraints; the planner authors task-specific WHAT, WHY, scope, invariants, technical plan, and acceptance; the worker owns internal implementation choices. The planner does not implement: workers mutate files. Planner acceptance checks do not grant permission to edit implementation. Planner-led validation determines whether agreed outcomes are demonstrated; it is not independent design critique. Main consumes the evidence and does not perform edits or checks. Use an additional independent review only when specifically requested for a concrete need or when the task's delivery profile includes it.
 
 ### 1. Understand intent
 
 - Restate the user's goal as outcome, affected repositories or workspace areas, constraints, and observable completion. If readings materially change the outcome, escalate the scope question to the user; otherwise use the conservative reading and state it.
 - Discover affected repositories from the user's request, the filesystem, and `LOCAL.md` when present. Read each affected repository's `.memory/MEMORY.md` if present. Note dependencies and sequence them; workspace-only work uses root guidance.
 - Scope planners around work and its acceptance. One planner can cover several repositories; independent work MAY use separate planners, subject to single-writer coordination.
+- Every task runs a delivery profile (`light`, `medium`, or `full`) per `docs/multiwave.md`. The planner chooses it unless the user names one; tasks in `products/kobar` run `full` during the pilot.
 - Truly trivial changes with no design choice, such as a typo or rename with named targets, MAY bypass the planner only through direct Main-to-worker delegation with explicit outcome and acceptance checks. The worker executes and reports those checks; any correction is delegated to a fresh worker. Main uses reported evidence and never performs or repeats acceptance checks.
 
 ### 2. Establish the contract
@@ -152,7 +154,7 @@ Main sets user intent and outcome/ownership constraints; the planner authors tas
 - After the worker finishes, the planner uses the report to understand the delivered outcome and assigned-check results, then runs required acceptance and smoke checks against the contract. Worker claims alone are not a pass. Compare actual commands, exit codes, and output with expected results.
 - Any required acceptance failure rejects the implementation. Any required check that is unrun or could not run blocks acceptance (`ACCEPTANCE_UNVERIFIED`), never `ACCEPT`.
 - The planner runs the contract's required acceptance; do not automatically repeat every repository suite for each worker. Workers run only local checks assigned to them. Main consumes reported evidence and never executes or repeats checks.
-- Run only agreed acceptance checks by default; do not add routine per-file or diff audits or other checks. Targeted source inspection is permitted to a planner or worker to diagnose a failed acceptance or concrete issue, or verify an explicit source-level or repository constraint in the contract; it is not a blanket gate. There is no mandatory separate validator, independent audit, risk-by-risk mutation package, or Main check rerun. Do not represent planner-led validation as independent review.
+- Run only agreed acceptance checks by default; do not add routine per-file or diff audits or other checks. Targeted source inspection is permitted to a planner or worker to diagnose a failed acceptance or concrete issue, or verify an explicit source-level or repository constraint in the contract; it is not a blanket gate. Outside the review waves of a `medium` or `full` profile, there is no mandatory separate validator, independent audit, risk-by-risk mutation package, or Main check rerun. Do not represent planner-led validation as independent review.
 
 ### 5. Correct and escalate
 
