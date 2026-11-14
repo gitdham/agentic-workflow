@@ -10,7 +10,7 @@ The planner picks one per task and records it in the contract. A user instructio
 
 | Profile | Use when | Waves |
 |---|---|---|
-| `light` | small change, direction clear | contract, implementation, close (the protocol in `AGENTS.md`) |
+| `light` | small change, direction clear | contract, implementation, close (the protocol in `.omp/agents/planner.md`) |
 | `medium` | new feature in an existing product | W4 → W5 → W6 → W7 |
 | `full` | new product, new subsystem, or many unknowns | W1 → W7 |
 
@@ -18,7 +18,7 @@ The planner picks one per task and records it in the contract. A user instructio
 
 All artifacts go to `plans/<task>/` unless stated. The planner spawns every wave agent itself; wave agents do not spawn agents.
 
-Subagents receive no `AGENTS.md` automatically. Every W1 scout and W6 worker brief names the workspace `AGENTS.md`, the affected repository's `AGENTS.md`, and its `.memory/MEMORY.md` if present, to read first. W2 and W5 reviewers get only their input file, so the information boundary holds.
+Every agent receives `.omp/RULES.md`, which tells it to read the target repository's `AGENTS.md` and memory; the planner still names the repository in each brief. W2 and W5 reviewers get only their input file as task material, so the information boundary holds.
 
 | Wave | Agents | Reads only | Writes |
 |---|---|---|---|
@@ -27,7 +27,7 @@ Subagents receive no `AGENTS.md` automatically. Every W1 scout and W6 worker bri
 | W3 Research synthesis | planner | W1 and W2 files | `research.md` |
 | W4 Design | planner | `research.md`, repo guidance | `contract.md` |
 | W5 Pre-implementation review | ≥2 `reviewer`, parallel, one per review area | `contract.md` only | `w5-<area>.md` |
-| W6 Implementation | one `task` worker per slice, sequential within a repository | the slice brief | code, tests, local commit per accepted slice |
+| W6 Implementation | one `worker` per slice, sequential within a repository | the slice brief | code, tests, local commit per accepted slice |
 | W7 Close | planner and one worker | everything above | promoted docs, `REVIEW.md` packets, report |
 
 ### W1 Explore
@@ -44,7 +44,7 @@ The reviewer labels every factual claim `VERIFIED` (primary source), `UNVERIFIED
 
 ### W4 Design
 
-The contract from `AGENTS.md` step 2 (six questions), plus:
+The contract from `.omp/agents/planner.md` (six questions), plus:
 
 - **Laws**: invariants stated as "for every X, if P then Q", each mapped to a machine check in the product's own language (property-based test or equivalent). Bend proofs are deferred until work moves to a Linux host; do not run Bend on this workstation.
 - **Surfaces**: for a product a person looks at or listens to, name each surface, the successful flow, its void states (empty, loading, partial, error, denied), and what it needs to exist.
@@ -61,7 +61,7 @@ At most two back-arcs per task. A third failure stops the run: the planner recor
 
 ### W6 Implementation
 
-Slices run in contract order through the normal brief, worker, and acceptance loop of `AGENTS.md`, including its two-round correction limit. Law checks are part of each slice's acceptance. Each accepted slice is committed locally in the product repository; never pushed.
+Slices run in contract order through the normal brief, worker, and acceptance loop of `.omp/agents/planner.md`, including its two-round correction limit. Law checks are part of each slice's acceptance. Each accepted slice is committed locally in the product repository; never pushed.
 
 ### W7 Close
 
@@ -81,7 +81,7 @@ A worker promotes `research.md` and `contract.md` into the product repository's 
 
 ## No questions inside a run
 
-A planner on `medium` or `full` does not ask the user anything. Ambiguity → the conservative reading, logged as a `decision` line. Only decisions in the held category of `## INBOX rules` stop work, and only the work that depends on them; the rest of the run continues.
+A planner on `medium` or `full` does not ask the user anything. Ambiguity → the conservative reading, logged as a `decision` line. Only decisions in the held category of `docs/review-flow.md` stop work, and only the work that depends on them; the rest of the run continues.
 
 ## Steering with follow-up notes
 

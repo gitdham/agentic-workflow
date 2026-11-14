@@ -1,18 +1,22 @@
 # Review flow
 
-Reference for `## Human review capacity` in the root `AGENTS.md`. Read it when writing a contract or an item in `REVIEW.md`.
+Shared reference for Main and the planner: review classes, the held-decision category, `REVIEW.md` layout, and the review packet. Main's queue limits are in `## Human review capacity` of the workspace `AGENTS.md`.
 
 ## Choosing the review class
 
-Ask in order; the first "yes" decides.
+Every deliverable gets one class. Ask in order; the first "yes" decides.
 
-1. Can an automated check prove the outcome (tests, measured metrics, diff of outputs)? → `machine`.
-2. Is the remaining question a choice that is cheap to undo and has a defensible recommendation? → `optimistic`.
-3. Does judging it need the user's senses, taste, or a physical device? → `experience`.
+1. Can an automated check prove the outcome (tests, measured metrics, diff of outputs)? → `machine`: no user action; one line in the final report.
+2. Is the remaining question a choice that is cheap to undo and has a defensible recommendation? → `optimistic`: proceed on the default and list it under `Running on defaults` for veto.
+3. Does judging it need the user's senses, taste, or a physical device (feel, look, sound)? → `experience`: it gates on the user and needs a review packet.
 
-A decision that is irreversible, costs money, installs software, pushes or publishes, or changes a spec or the user's stated intent is not a review item: it is held in `INBOX.md`.
+Use `experience` only for what automation cannot judge.
 
 Split mixed deliverables. "Gyro aiming" is `machine` for the direction math and tests and `experience` only for how it feels on a real phone; only the second part waits for the user.
+
+## Held decisions
+
+A decision is held in `INBOX.md`, not reviewed, when it is irreversible, costs money, installs software, pushes or publishes, changes a spec or the user's stated intent, or has no defensible default. Everything else is `optimistic`.
 
 ## `REVIEW.md` layout
 

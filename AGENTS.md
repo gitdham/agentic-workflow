@@ -9,7 +9,9 @@ This directory is an orchestration workspace containing the root repository and,
 - `REVIEW.md`: queue of work waiting for the user's own trial or veto; Git-ignored and untracked; see `## Human review capacity`.
 - `docs/review-flow.md`: review packet format and class guidance; read when writing a contract or a `REVIEW.md` item.
 - `.memory/MEMORY.md`: root-level memory for cross-repository and workflow learnings.
-- `.omp/agents/planner.md`: task-scoped planner definition.
+- `.omp/RULES.md`: rules for every agent, loaded into every session including subagents (shell proxy, commits and pushes, memory).
+- `.omp/agents/planner.md`: the planner and its full delivery protocol (contract, briefs, acceptance, correction, verdict).
+- `.omp/agents/worker.md`: the worker, its contract, and the `SIGNAL` values.
 - `plans/`: optional gitignored in-flight planner output; multiwave runs keep their artifacts and append-only `run.log` in `plans/<task>/`.
 - `docs/multiwave.md`: delivery profiles and the multiwave pipeline; read when a task runs the `medium` or `full` profile.
 - `LOCAL.md`: optional Git-excluded machine-specific notes and repository inventory. Main and planners read it for routing when present; never track it.
@@ -19,7 +21,7 @@ Nested repositories live wherever the user places them under the workspace root.
 ## INBOX rules
 
 - `INBOX.md` holds only decisions held for the user. Each item is one question with options and a recommendation when known.
-- Hold a decision only when it is irreversible, costs money, installs software, pushes or publishes, changes a spec or the user's stated intent, or has no defensible default. Every other decision is `optimistic`: take the recommendation and list it in `REVIEW.md`.
+- Hold a decision only when it is in the held category of `docs/review-flow.md`. Every other decision is `optimistic`: take the recommendation and list it in `REVIEW.md`.
 - Reports, status, history, verification detail, and items that merely wait on a user trigger do not belong in `INBOX.md`. Work waiting for the user's trial goes to `REVIEW.md`; the rest goes to the final report, a repository's `AGENTS.md` or docs, memory (only verified reusable learnings), or Git.
 - Remove an item as soon as the user answers. If the answer matters later, record it in its proper place, not in `INBOX.md`.
 - When nothing is held, `INBOX.md` says `No held decisions.`
@@ -30,11 +32,7 @@ Nested repositories live wherever the user places them under the workspace root.
 
 The user's attention is the scarcest resource. Schedule work against the user's review queue, not against agent capacity.
 
-- Every contract assigns each deliverable one review class:
-  - `machine`: automated acceptance proves it; no user action; one line in the final report.
-  - `optimistic`: reversible with a recommended default; proceed on the default and list it in `REVIEW.md` under `Running on defaults` for veto.
-  - `experience`: only the user's senses, taste, or physical hardware can judge it (feel, look, sound, device); it gates on the user.
-- Use `experience` only for what automation cannot judge, and split deliverables so `machine` parts never wait behind it.
+- Every contract assigns each deliverable one review class, `machine`, `optimistic`, or `experience`, as defined in `docs/review-flow.md`.
 - Limits: at most one unreviewed `experience` item per repository and two across the workspace. At a limit, Main MUST NOT dispatch work that builds on an unreviewed item or adds another `experience` item. It dispatches only independent `machine`/`optimistic` work, or work that makes a pending review cheaper (recordings, one-command launchers, checks derived from earlier user feedback). An explicit user instruction overrides a limit; Main states the queue first.
 - Every `experience` item enters `REVIEW.md` as a review packet in the format of `docs/review-flow.md`. An item without a packet is not ready for the user.
 - Order `REVIEW.md` by how much downstream work each item unblocks. At session start and in every final report, Main states the total estimated review minutes and the first item, not the whole list.
@@ -51,34 +49,14 @@ By default, Main MUST NOT explore source or code to solve technical tasks, autho
 
 Only an explicit user request for a specifically named, non-development administrative control-plane decision or communication permits Main to perform that action directly. This narrow exception does not permit repository file mutation, technical execution, or broader action; all repository changes remain delegated.
 
-1. At session start, Main reads `INBOX.md`, `REVIEW.md`, root guidance, relevant root memory, and `LOCAL.md` if present for routing, and checks the `## Human review capacity` limits before every dispatch. Main discovers affected repositories from the user's request, the filesystem, and `LOCAL.md` when present. It may also read agent reports, transcripts, task status, and the minimal Git facts above.
-2. Assign a task-scoped planner when work needs planning. Keep that planner for the task's full delivery loop, not as a standing repository lead. The planner MUST read each affected repository's `AGENTS.md` first, then its `.memory/MEMORY.md` if present. Workspace-only tasks use root guidance. The planner authors the task-specific contract and design and directly delegates technical work.
+1. At session start, Main reads `INBOX.md`, `REVIEW.md`, `docs/review-flow.md`, root guidance, relevant root memory, and `LOCAL.md` if present for routing, and checks the `## Human review capacity` limits before every dispatch. Main discovers affected repositories from the user's request, the filesystem, and `LOCAL.md` when present. It may also read agent reports, transcripts, task status, and the minimal Git facts above.
+2. Assign a task-scoped `planner` when work needs planning. Keep that planner for the task's full delivery loop, not as a standing repository lead. The planner authors the task-specific contract and design and directly delegates technical work.
 3. Enforce the single-writer rule: only one implementation writer may own an affected repository or working tree at a time, including across separate tasks. The planner waits for the current worker to finish before dispatching a correction worker and does not run destructive checks while a writer is active. Never let two workers edit the same repository or working tree at once.
 4. Report to the user what changed per affected repository or workspace area, who ran which checks and their results, what remains unverified, and any human decision needed. Main consumes worker and planner evidence; it does not execute or repeat technical checks.
 
-## Rules
+## Rules for every agent
 
-- Memory stays inside this workspace. NEVER write to global or user-level memory stores, and NEVER install a memory plugin or enable a memory backend.
-- When a delegated executor is assigned or required to commit, it commits inside the affected repository's own Git repository. An executor changing files in a nested repository never stages or commits those files in the root repository. This does not authorize Main to stage or commit.
-- Both nested repositories `products/paint-reactive-2` and `products/irkar-demo` stay local: never push unless the user asks.
-
-## Command Execution: Always Use RTK Proxy
-
-- Run every shell command through `rtk proxy`. This includes inspection, Git, dependency installation, development servers, builds, tests, and automated verification commands.
-- Do not run bare commands or silently bypass the proxy.
-- For command chains, proxy each command separately, or run the entire script through a proxied shell.
-- If `rtk proxy` is unavailable or cannot execute a required command, report the blocker and ask how to proceed instead of falling back to an unproxied command.
-- Native file-reading and editing tools do not require a shell command.
-
-Examples:
-
-    rtk proxy git status --short
-    rtk proxy ls -la
-    rtk proxy npm test
-    rtk proxy npm run build && rtk proxy npm test
-    rtk proxy bash -lc 'npm run build && npm test'
-
-The examples illustrate command wrapping; they do not prescribe a package manager or technology stack.
+Shell proxy (`rtk proxy`), commit and push, and memory-store rules apply to every agent and live in `.omp/RULES.md`, which omp loads into every session, including subagents. Main follows them too.
 
 ## Repository memory
 
@@ -100,7 +78,7 @@ Main owns user intent, routing, outcome and ownership contracts, dependencies, s
 |---|---|---|---|
 | Orchestrator | main session | default | user intent and liaison; routing; outcome and ownership contracts; dependencies; single-writer coordination and escalation; control-artifact decisions; minimal coordination facts; final report, with no routine mutations or technical checks |
 | Planner | `planner` | `@plan` role | task contract and technical plan/design, requested outcome, WHY, scope, invariants, necessary shared/public constraints, acceptance criteria, direct worker delegation, acceptance validation, and correction |
-| Worker | `task` | `@task` role | implement a slice and perform assigned repository mutations/checks; choose internal HOW using repository conventions |
+| Worker | `worker` | `@task` role | implement a slice and perform assigned repository mutations/checks; choose internal HOW using repository conventions |
 
 Main sets user intent and outcome/ownership constraints; the planner authors task-specific WHAT, WHY, scope, invariants, technical plan, and acceptance; the worker owns internal implementation choices. The planner does not implement: workers mutate files. Planner acceptance checks do not grant permission to edit implementation. Planner-led validation determines whether agreed outcomes are demonstrated; it is not independent design critique. Main consumes the evidence and does not perform edits or checks. Use an additional independent review only when specifically requested for a concrete need or when the task's delivery profile includes it.
 
@@ -110,64 +88,19 @@ Main sets user intent and outcome/ownership constraints; the planner authors tas
 - Discover affected repositories from the user's request, the filesystem, and `LOCAL.md` when present. Read each affected repository's `.memory/MEMORY.md` if present. Note dependencies and sequence them; workspace-only work uses root guidance.
 - Scope planners around work and its acceptance. One planner can cover several repositories; independent work MAY use separate planners, subject to single-writer coordination.
 - Every task runs a delivery profile (`light`, `medium`, or `full`) per `docs/multiwave.md`. The planner chooses it unless the user names one; tasks in `products/kobar` run `full` during the pilot.
-- Truly trivial changes with no design choice, such as a typo or rename with named targets, MAY bypass the planner only through direct Main-to-worker delegation with explicit outcome and acceptance checks. The worker executes and reports those checks; any correction is delegated to a fresh worker. Main uses reported evidence and never performs or repeats acceptance checks.
+- Truly trivial changes with no design choice, such as a typo or rename with named targets, MAY bypass the planner only through direct Main-to-`worker` delegation with a brief in the format of `.omp/agents/planner.md` and explicit acceptance checks. The worker executes and reports those checks; any correction goes to a fresh worker. Main uses reported evidence and never performs or repeats acceptance checks.
 
-### 2. Establish the contract
+### 2. Hand off to the planner
 
 - Before dispatch, Main records each affected repository's `git rev-parse HEAD` as its base SHA using this minimal Git coordination fact and gives it to the planner. A new repository has no base SHA, so the planner reviews the relevant tree. For workspace-only work, use the root repository's base SHA.
-- The planner reads relevant guidance, source, tests, memory, and existing conventions. It maps the work through six questions: (1) things and states, (2) happy path, (3) failure behavior, (4) dependencies and ordering, (5) data boundaries, and (6) proof of behavior.
-- The planner's contract covers outcome, WHY, scope and non-goals, invariants, necessary shared/public interfaces, acceptance cases and expected results, assumptions, dependencies, and the review class of each deliverable. For an `experience` deliverable, producing the review packet and its launcher or recording is part of the acceptance.
-- Keep planner context for the full task. A plan is an intermediate contract, not a reason to stop when the assignment includes delivery.
-- Do not require the planner to prescribe every internal type, helper, algorithm, retry policy, or exact implementation recipe. The worker chooses internal HOW using repository conventions while honoring the contract.
+- The planner's contract, briefs, acceptance, and correction loop are defined in `.omp/agents/planner.md`; the worker contract and `SIGNAL` values in `.omp/agents/worker.md`. Main reads them only to interpret a report.
+- The planner escalates to Main after two failed rounds on one slice, on a disproved assumption that changes outcome or scope, and on decisions in the held category. Main handles those with the user.
 
-### 3. Brief and dispatch workers
-
-- The planner writes and checks each brief, then directly calls `task`; Main does not relay implementation dispatches. Use a fresh worker for every slice and every correction attempt. Do not dispatch a second writer until the previous writer has actually finished.
-- Pass the worker the relevant slice and WHY from the planner's contract. Every brief includes affected repository or workspace paths, files and non-goals, base SHAs, and these concise sections:
-  - `# Target`: affected repositories or workspace areas, files with paths, and non-goals.
-  - `# Why`: the design reason, grounded in the planner's map, so the worker can handle edge cases.
-  - `# Change`: observable obligations and actual shared/public constraints, not a prescription for every internal detail.
-  - `# Acceptance`: starts with one sentence describing observable correct behavior, then runnable required checks and expected results. Include at least one check that would fail if required behavior were missing.
-  - `# Report`: signal, files changed, actual commands/results, blockers, and commit SHA if committed or `not committed`.
-- Before dispatch, the planner checks that a worker can identify the outcome, WHY, boundaries, and observable acceptance without an open design question. The planner resolves technical ambiguity; Main handles genuine scope decisions.
-- Shared worker context carries relevant workspace and repository `AGENTS.md` paths, the single-writer rule, worker contract, and requirements not to add placeholders, weaken or delete tests, or take unrequested scope.
-
-**Worker contract (include in each worker context).**
-
-- Implement the required outcome and acceptance. Choose internal implementation details using repository conventions.
-- Do not change required outcomes, shared/public constraints, scope, or acceptance criteria without planner agreement. Report a contradiction or missing prerequisite rather than guessing.
-- Run assigned local checks and report actual results. Do not claim an unrun check passed. Main never launches or executes a live technical smoke check; any required technical smoke check is assigned to a worker or planner according to the contract, and that actor reports its evidence.
-- Do not weaken or delete tests, change data or constants to force a pass, add placeholders, or take unrequested scope.
-- Report files changed and commit SHA if a commit was made, otherwise `not committed`; a commit is not required unless the task or repository policy requires it. These commit instructions apply only to delegated executors; Main must not stage or commit.
-- The final message MUST begin with exactly one line `SIGNAL: <X>` as its first characters, where `<X>` is exactly one of the five signals in the table below; then give commands, exit codes and key output, changed files, blockers, and commit SHA or `not committed`.
-
-| Signal | Meaning |
-|---|---|
-| `VERIFICATION_PASSED` | The worker implemented the slice and all checks assigned to that worker ran and passed. This informs the planner but is not a task acceptance verdict. |
-| `VERIFICATION_FAILED` | The worker implemented the slice and assigned checks ran but still fail after attempted fixes. Include failing output. |
-| `IMPLEMENTATION_COMPLETE` | The worker implemented the slice, but an assigned check could not be run. State which check and why; any required check still unrun blocks acceptance. |
-| `IMPLEMENTATION_BLOCKED` | The worker cannot proceed, such as from a missing dependency or broken environment. State what was tried. |
-| `NEEDS_COORDINATOR_INPUT` | A real ambiguity or contradiction prevents implementation. State the question and recommended default; the planner resolves technical contract issues and escalates scope decisions. |
-
-### 4. Validate acceptance
-
-- After the worker finishes, the planner uses the report to understand the delivered outcome and assigned-check results, then runs required acceptance and smoke checks against the contract. Worker claims alone are not a pass. Compare actual commands, exit codes, and output with expected results.
-- Any required acceptance failure rejects the implementation. Any required check that is unrun or could not run blocks acceptance (`ACCEPTANCE_UNVERIFIED`), never `ACCEPT`.
-- The planner runs the contract's required acceptance; do not automatically repeat every repository suite for each worker. Workers run only local checks assigned to them. Main consumes reported evidence and never executes or repeats checks.
-- Run only agreed acceptance checks by default; do not add routine per-file or diff audits or other checks. Targeted source inspection is permitted to a planner or worker to diagnose a failed acceptance or concrete issue, or verify an explicit source-level or repository constraint in the contract; it is not a blanket gate. Outside the review waves of a `medium` or `full` profile, there is no mandatory separate validator, independent audit, risk-by-risk mutation package, or Main check rerun. Do not represent planner-led validation as independent review.
-
-### 5. Correct and escalate
-
-- On rejection, the planner gives a fresh worker the specific defect, expected behavior, and observed evidence. Keep outcome and acceptance criteria unchanged; the worker chooses the correction's internal HOW.
-- A missing or invalid signal/report gets one request for a valid report and counts as a failed round. Each failed round on a slice is bounded; after two failed rounds on the same slice, stop delegating and escalate to Main with evidence and a recommended next action.
-- If an assumption is disproved, record the evidence and impact. The planner MAY revise the contract to preserve user intent but must not weaken criteria merely to pass a candidate. Outcome or scope changes go to Main for user handling.
-- A missing capability or unrun required acceptance is a blocker, not a pass. The planner reports the exact blocker and what remains unverified.
-
-### 6. Memory, plans, and reporting
+### 3. Memory, plans, and reporting
 
 - After planner acceptance, Main applies the Repository memory rules as a decision and accountability step. Main assigns any memory or dashboard mutation to an authorized worker; the planner validates meaningful changes. Main does not make these edits itself.
 - Create dedicated acceptance-evidence artifacts only when genuinely required by repository policy or explicitly requested; otherwise include observed results in the final report. Main authorizes and scopes any required artifact; an assigned worker creates or updates it, while the planner coordinates and validates as appropriate. Do not alter unrelated or pre-existing artifacts.
-- The planner's verdict is `ACCEPT`, `REJECT`, or `BLOCKED`. `ACCEPT` requires every required acceptance check to pass and demonstrate the contract outcomes; a worker signal is not a verdict. With the verdict the planner returns the review packet for each `experience` deliverable and one line per `optimistic` default taken.
+- The planner's verdict is `ACCEPT`, `REJECT`, or `BLOCKED`, with the report defined in `.omp/agents/planner.md`; a worker signal is not a verdict. Main moves review packets and `optimistic` defaults into `REVIEW.md` through an assigned worker.
 - The final report states what changed per affected repository or workspace area, which actor ran which checks and their actual results, any failed or corrected attempts, blockers and unverified work, and decisions needed. List worker-reported changed files without implying every file was personally inspected. Mention that planner-led validation is not independent design critique when relevant.
 
 ## Writing AGENTS.md
