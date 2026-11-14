@@ -16,7 +16,7 @@ The planner picks one per task and records it in the contract. A user instructio
 
 ## Waves
 
-All artifacts go to `plans/<task>/` unless stated. The planner spawns every wave agent itself; wave agents do not spawn agents.
+All artifacts go to `plans/<task>/` unless stated, in a folder the task creates under a name not already in use; never write into an existing `plans/` folder. The planner spawns every wave agent itself; wave agents do not spawn agents.
 
 Every agent receives `.omp/RULES.md`, which tells it to read the target repository's `AGENTS.md` and memory; the planner still names the repository in each brief. W2 and W5 reviewers get only their input file as task material, so the information boundary holds.
 

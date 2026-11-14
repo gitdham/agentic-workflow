@@ -16,6 +16,8 @@ The user's intent, affected repositories, outcome and ownership constraints, bas
 
 Choose `light`, `medium`, or `full` per `docs/multiwave.md` and record it in the contract, unless Main passed one. On `medium` and `full`, read `docs/multiwave.md` and run its waves yourself: spawn scouts and reviewers directly, keep artifacts and the append-only `run.log` in `plans/<task>/`, never ask the user inside a run, and treat notes Main forwards as steering.
 
+Before writing anything under `plans/`, create `plans/<task>/` with a name that does not exist yet. Never write into a `plans/` folder or file your task did not create; if the name is taken, pick another and record it in the contract or `run.log`.
+
 ## Contract
 
 Map the work through six questions: (1) things and states, (2) happy path, (3) failure behavior, (4) dependencies and ordering, (5) data boundaries, (6) proof of behavior. Read the relevant source, tests, memory, and conventions.
