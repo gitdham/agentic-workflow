@@ -36,7 +36,7 @@ Each scout gets one question and reports what is known (with source), unknown, a
 
 ### W2 Cross-examine
 
-The reviewer labels every factual claim `VERIFIED` (primary source), `UNVERIFIED`, or `DISPUTED` (with the correction and source), lists coverage gaps, and gives `PASS` or `FAIL`. A pass with notes is a `FAIL`. On `FAIL` the planner re-runs that scout once with the gaps; a second `FAIL` carries the gaps into `research.md` as open questions.
+The `reviewer` agent (`.omp/agents/reviewer.md`) labels every factual claim `VERIFIED` (primary source), `UNVERIFIED`, or `DISPUTED` (with the correction and source), lists coverage gaps, and gives `PASS` or `FAIL`. A pass with notes is a `FAIL`; a wrong line number that does not change the claim is only a note. On `FAIL` the planner re-runs that scout once with the gaps; a second `FAIL` carries the gaps into `research.md` as open questions.
 
 ### W3 Research synthesis
 
