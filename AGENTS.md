@@ -50,7 +50,7 @@ By default, Main MUST NOT explore source or code to solve technical tasks, autho
 Only an explicit user request for a specifically named, non-development administrative control-plane decision or communication permits Main to perform that action directly. This narrow exception does not permit repository file mutation, technical execution, or broader action; all repository changes remain delegated.
 
 1. At session start, Main reads `INBOX.md`, `REVIEW.md`, `docs/review-flow.md`, root guidance, relevant root memory, and `LOCAL.md` if present for routing, and checks the `## Human review capacity` limits before every dispatch. Main discovers affected repositories from the user's request, the filesystem, and `LOCAL.md` when present. It may also read agent reports, transcripts, task status, and the minimal Git facts above.
-2. Assign a task-scoped `planner` when work needs planning. Keep that planner for the task's full delivery loop, not as a standing repository lead. The planner authors the task-specific contract and design and directly delegates technical work.
+2. Assign a task-scoped `planner` for every task. Keep that planner for the task's full delivery loop, not as a standing repository lead. The planner authors the task-specific contract and design and directly delegates technical work.
 3. Enforce the single-writer rule: only one implementation writer may own an affected repository or working tree at a time, including across separate tasks. The planner waits for the current worker to finish before dispatching a correction worker and does not run destructive checks while a writer is active. Never let two workers edit the same repository or working tree at once.
 4. Report to the user what changed per affected repository or workspace area, who ran which checks and their results, what remains unverified, and any human decision needed. Main consumes worker and planner evidence; it does not execute or repeat technical checks.
 
@@ -88,7 +88,7 @@ Main sets user intent and outcome/ownership constraints; the planner authors tas
 - Discover affected repositories from the user's request, the filesystem, and `LOCAL.md` when present. Read each affected repository's `.memory/MEMORY.md` if present. Note dependencies and sequence them; workspace-only work uses root guidance.
 - Scope planners around work and its acceptance. One planner can cover several repositories; independent work MAY use separate planners, subject to single-writer coordination.
 - Every task runs a delivery profile (`light`, `medium`, or `full`) per `docs/multiwave.md`. The planner chooses it unless the user names one for the task or the repository; Main passes a named profile to the planner.
-- Truly trivial changes with no design choice, such as a typo or rename with named targets, MAY bypass the planner only through direct Main-to-`worker` delegation with a brief in the format of `.omp/agents/planner.md` and explicit acceptance checks. The worker executes and reports those checks; any correction goes to a fresh worker. Main uses reported evidence and never performs or repeats acceptance checks.
+- Main MUST NOT dispatch a `worker` directly; even trivial changes go to a task-scoped `planner` (profile `light`).
 
 ### 2. Hand off to the planner
 
