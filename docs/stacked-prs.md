@@ -34,12 +34,14 @@ Before asking, prefer a procedure that needs no force push at all: when the bott
 
 When a manual repair is unavoidable, report to Main the exact command, the branch, the expected current (old) remote SHA, and what the diff should look like afterwards, then wait.
 
-Which `gh stack` commands push:
+Which `gh stack` commands push, as observed:
 
-- `gh stack push`: per-branch `--force-with-lease` with atomic updates. Counts as a force push.
-- `gh stack sync`: rebases, then pushes with `--force-with-lease`. Counts as a force push.
-- `gh stack rebase`: fetches and rebases locally and does not push. No ask needed.
+- `gh stack push`: per-branch `--force-with-lease` with atomic updates; it was seen to update the upper branch's remote ref non-fast-forward, so it rewrites a pushed branch. Needs the ask.
+- `gh stack sync`: rebases, then pushes with `--force-with-lease`; when it did the rebase itself it force-updated the upper branch's remote ref. Needs the ask.
+- `gh stack rebase`: fetches and rebases locally and pushes nothing; it prints that `gh stack push` is still needed. No ask needed.
 - The web "Rebase stack" button force-pushes every rebased branch on the server and produces unsigned commits. It is the user's action, never an agent's.
+
+`gh stack` does not shell out to `git`, so the `--force-with-lease` lease semantics come from its documentation and are not directly observable. Treat both pushing commands as force pushes regardless.
 
 So `gh stack push` and `gh stack sync` need the per-occasion ask; `gh stack rebase` does not.
 
@@ -75,6 +77,9 @@ Three read-only commands, nothing else:
 ## Pitfalls
 
 - Run `gh stack rebase` or `gh stack sync` before asking the user to merge. After a manual force push, a stale stack can leave a pull request pointing at a merged branch, and `gh stack submit` does not repair that.
+- `gh stack sync` can exit 0 and report the stack synced while the branch push failed; it prints that branches may need a force push. After any sync, verify the remote refs actually moved before telling the user a stack is ready.
+- `gh stack init` refuses to run on a detached HEAD; check out a real branch in the worktree first. It may still create the branch it was given before failing, so re-run it after switching.
+- Non-interactive `gh stack submit` creates drafts; pass `--open` to mark the pull requests ready for review.
 - Never force-push the bottom branch by hand while a stack is active.
 - Do not check out one branch in two worktrees; rebase, sync, and modify refuse to run.
 - Keep other worktrees clean and idle while a stack is rebased. The gh-stack lock coordinates gh-stack processes only, not other Git commands or editors.
