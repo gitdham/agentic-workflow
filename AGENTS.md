@@ -8,6 +8,10 @@ This directory is an orchestration workspace containing the root repository and,
 - `INBOX.md`: held decisions for the user; Git-ignored and untracked; see `## INBOX rules`.
 - `REVIEW.md`: queue of work waiting for the user's own trial or veto; Git-ignored and untracked; see `## Human review capacity`.
 - `docs/review-flow.md`: review packet format and class guidance; read when writing a contract or a `REVIEW.md` item.
+- `docs/stacked-prs.md`: stacked pull request policy; read it before branching, stacking, or force-pushing a pull request branch.
+- `docs/orchestrator.md`: the orchestrator protocol; read it when acting as Main.
+- `docs/delegation.md`: delegation and delivery protocol; read it when routing work or handing a task to a planner.
+- `docs/agents-md-style.md`: rules for writing and growing any `AGENTS.md`.
 - `.memory/MEMORY.md`: root-level memory for cross-repository and workflow learnings.
 - `.omp/RULES.md`: rules for every agent, loaded into every session including subagents (shell proxy, commits and pushes, memory).
 - `.omp/agents/planner.md`: the planner and its full delivery protocol (contract, briefs, acceptance, correction, verdict).
@@ -41,22 +45,13 @@ The user's attention is the scarcest resource. Schedule work against the user's 
 
 ## Orchestrator protocol
 
-Main is the active control-plane orchestrator/liaison, not a hands-on developer or pair programmer. It actively steers concurrent agent work and user communication.
-
-Main may read `LOCAL.md`, `INBOX.md`, `REVIEW.md`, `plans/*/run.log`, workspace and repository `AGENTS.md` and `.memory/MEMORY.md` files for routing; agent reports, transcripts, and task status; and only minimal Git coordination facts (`git rev-parse HEAD` and `git status --short`). It may assign and steer agents; own user intent, routing, outcome and ownership contracts, dependencies, single-writer coordination, and escalation; handle genuine user scope decisions; decide whether memory or dashboard updates are needed; and synthesize the final report. When the user sends a note about a running task, Main forwards it to that task's planner, which handles it per `docs/multiwave.md`.
-
-By default, Main MUST NOT explore source or code to solve technical tasks, author the task-specific contract, implementation/design plan, or worker brief, edit repository files (including code, docs, plans, memory, or dashboards), install dependencies, run apps, services, migrations, tests, builds, linters, formatters, technical smoke checks, browser verification, or debugging, or stage or commit. Delegate planning and technical design to the planner; workers perform assigned repository mutations and checks; planners validate acceptance.
-
-Only an explicit user request for a specifically named, non-development administrative control-plane decision or communication permits Main to perform that action directly. This narrow exception does not permit repository file mutation, technical execution, or broader action; all repository changes remain delegated.
-
-1. At session start, Main reads `INBOX.md`, `REVIEW.md`, `docs/review-flow.md`, root guidance, relevant root memory, and `LOCAL.md` if present for routing, and checks the `## Human review capacity` limits before every dispatch. Main discovers affected repositories from the user's request, the filesystem, and `LOCAL.md` when present. It may also read agent reports, transcripts, task status, and the minimal Git facts above.
-2. Assign a task-scoped `planner` for every task. Keep that planner for the task's full delivery loop, not as a standing repository lead. The planner authors the task-specific contract and design and directly delegates technical work.
-3. Enforce the single-writer rule: only one implementation writer may own an affected repository or working tree at a time, including across separate tasks. The planner waits for the current worker to finish before dispatching a correction worker and does not run destructive checks while a writer is active. Never let two workers edit the same repository or working tree at once.
-4. Report to the user what changed per affected repository or workspace area, who ran which checks and their results, what remains unverified, and any human decision needed. Main consumes worker and planner evidence; it does not execute or repeat technical checks.
+- Orchestrator protocol: see `docs/orchestrator.md`; read it when acting as Main.
 
 ## Rules for every agent
 
 Shell proxy (`rtk proxy`), commit and push, and memory-store rules apply to every agent and live in `.omp/RULES.md`, which omp loads into every session, including subagents. Main follows them too.
+
+- Do not stack pull requests by default; if a stack is unavoidable it is at most 3 PRs, registered as a native GitHub stack, and no agent force-pushes a pushed PR branch without the user's per-occasion approval; see `docs/stacked-prs.md`.
 
 ## Repository memory
 
@@ -72,45 +67,8 @@ Plain Markdown in `.memory/MEMORY.md` is shared across agents. Main owns memory 
 
 ## Delegation and delivery protocol
 
-Main owns user intent, routing, outcome and ownership contracts, dependencies, single-writer coordination, escalations, and user liaison, plus decisions and accountability for memory and dashboard updates. That ownership is not file-editing permission: an authorized worker performs every mutation, and the planner validates meaningful changes. The task-scoped planner owns the task-specific contract, technical plan, direct worker dispatch, and acceptance/correction loop; workers execute technical implementation, assigned mutations, and assigned checks.
-
-| Role | Agent | Model | Owns |
-|---|---|---|---|
-| Orchestrator | main session | default | user intent and liaison; routing; outcome and ownership contracts; dependencies; single-writer coordination and escalation; control-artifact decisions; minimal coordination facts; final report, with no routine mutations or technical checks |
-| Planner | `planner` | `@plan` role | task contract and technical plan/design, requested outcome, WHY, scope, invariants, necessary shared/public constraints, acceptance criteria, direct worker delegation, acceptance validation, and correction |
-| Worker | `worker` | `@task` role | implement a slice and perform assigned repository mutations/checks; choose internal HOW using repository conventions |
-
-Main sets user intent and outcome/ownership constraints; the planner authors task-specific WHAT, WHY, scope, invariants, technical plan, and acceptance; the worker owns internal implementation choices. The planner does not implement: workers mutate files. Planner acceptance checks do not grant permission to edit implementation. Planner-led validation determines whether agreed outcomes are demonstrated; it is not independent design critique. Main consumes the evidence and does not perform edits or checks. Use an additional independent review only when specifically requested for a concrete need or when the task's delivery profile includes it.
-
-### 1. Understand intent
-
-- Restate the user's goal as outcome, affected repositories or workspace areas, constraints, and observable completion. If readings materially change the outcome, escalate the scope question to the user; otherwise use the conservative reading and state it.
-- Discover affected repositories from the user's request, the filesystem, and `LOCAL.md` when present. Read each affected repository's `.memory/MEMORY.md` if present. Note dependencies and sequence them; workspace-only work uses root guidance.
-- Scope planners around work and its acceptance. One planner can cover several repositories; independent work MAY use separate planners, subject to single-writer coordination.
-- Every task runs a delivery profile (`light`, `medium`, or `full`) per `docs/multiwave.md`. The planner chooses it unless the user names one for the task or the repository; Main passes a named profile to the planner.
-- Main MUST NOT dispatch a `worker` directly; even trivial changes go to a task-scoped `planner` (profile `light`).
-
-### 2. Hand off to the planner
-
-- Before dispatch, Main records each affected repository's `git rev-parse HEAD` as its base SHA using this minimal Git coordination fact and gives it to the planner. A new repository has no base SHA, so the planner reviews the relevant tree. For workspace-only work, use the root repository's base SHA.
-- The planner's contract, briefs, acceptance, and correction loop are defined in `.omp/agents/planner.md`; the worker contract and `SIGNAL` values in `.omp/agents/worker.md`. Main reads them only to interpret a report.
-- The planner escalates to Main after two failed rounds on one slice, on a disproved assumption that changes outcome or scope, and on decisions in the held category. Main handles those with the user.
-
-### 3. Memory, plans, and reporting
-
-- After planner acceptance, Main applies the Repository memory rules as a decision and accountability step. Main assigns any memory or dashboard mutation to an authorized worker; the planner validates meaningful changes. Main does not make these edits itself.
-- Create dedicated acceptance-evidence artifacts only when genuinely required by repository policy or explicitly requested; otherwise include observed results in the final report. Main authorizes and scopes any required artifact; an assigned worker creates or updates it, while the planner coordinates and validates as appropriate. Do not alter unrelated or pre-existing artifacts.
-- The planner's verdict is `ACCEPT`, `REJECT`, or `BLOCKED`, with the report defined in `.omp/agents/planner.md`; a worker signal is not a verdict. Main moves review packets and `optimistic` defaults into `REVIEW.md` through an assigned worker.
-- The final report states what changed per affected repository or workspace area, which actor ran which checks and their actual results, any failed or corrected attempts, blockers and unverified work, and decisions needed. List worker-reported changed files without implying every file was personally inspected. Mention that planner-led validation is not independent design critique when relevant.
+- Delegation and delivery protocol: see `docs/delegation.md`; read it when routing work or handing a task to a planner.
 
 ## Writing AGENTS.md
 
-Agents read every `AGENTS.md` on every task, so keep each file a small, current operating manual for its repository.
-
-- Keep only what an agent needs on every task in that repository: purpose in two or three lines, how to run and verify, hard rules and invariants, and a docs map. Budget: at most 150 lines and 10 KB per file.
-- Write only what cannot be derived from the repository or would otherwise be rediscovered each session; do not list files, node trees, tables or commands already available in code or tools.
-- Put architecture and reference material in `docs/`, linked with one line saying when to read it; every fact has one source of truth, so link instead of copying.
-- Keep measurements, verification results, dates, hashes or SHAs and "latest save" facts out of `AGENTS.md`; put them in reports, Git or `docs/`.
-- Record evidence-backed gotchas in `.memory`; keep only the resulting one-line rule in `AGENTS.md`.
-- Do not repeat root rules in nested `AGENTS.md` files; write every rule imperatively and verifiably, and turn absolute prohibitions into checks or tests where possible.
-- Before finishing any change that grows an `AGENTS.md`, check its budget and move the excess to `docs/` in the same change.
+- Writing `AGENTS.md`: see `docs/agents-md-style.md`; read it when creating, growing, or reviewing any `AGENTS.md`.
