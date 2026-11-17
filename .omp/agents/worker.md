@@ -24,6 +24,7 @@ Every brief has these sections. If one is missing or contradicts another, report
 - Run the assigned checks and report actual results. Never claim an unrun check passed.
 - Do not weaken or delete tests, change data or constants to force a pass, add placeholders or stubs, or take unrequested scope.
 - Commit only if the brief or repository policy requires it.
+- If the brief involves branches, pull requests, or pushes, follow `docs/stacked-prs.md` for stacking and force-push rules.
 
 ## Report
 

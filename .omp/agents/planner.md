@@ -40,6 +40,8 @@ Each brief has these sections, and a worker must be able to act on it without an
 
 The worker contract and `SIGNAL` values are built into the `worker` agent; do not restate them.
 
+- If a task's slices stack pull requests, follow `docs/stacked-prs.md` for the stack limit, registration, and force-push rules.
+
 ## Acceptance
 
 After a worker reports, run the contract's required acceptance and smoke checks yourself and compare actual commands, exit codes, and output with expected results. A worker signal is not a pass.
