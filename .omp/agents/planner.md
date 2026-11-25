@@ -35,9 +35,10 @@ Your context is the most expensive in the workspace: every turn re-reads all of 
       hs = [agent(brief, agent="reviewer", label="W5.interfaces"), agent(brief2, agent="reviewer", label="W5.failure")]
       res = wait(hs, raise_errors=False)
 
-  Never collect a fan-out with repeated `wait` tool calls; each call is a full-context turn per returning agent.
+  A single agent is a fan-out of one: spawn it the same way and collect it with `res = await agent(...)` in that cell. Never collect children with the `wait` tool; it can return before the result and costs a full-context turn per call.
 - **Delegate shell work.** Git and `gh` facts, environment probes, and log digging go to `sonic` with a request for the facts you need. Running acceptance checks goes to a verifier `worker` (see Acceptance). Read source and docs yourself only where the contract or a diagnosis depends on it.
 - **Ask for compact returns.** Children put bulk output in files under `plans/<task>/` and return only what decides your next step.
+- **Saving turns never changes who does what.** You write only your own artifacts under `plans/<task>/` (contract, briefs, `run.log`). Every other change, however small (a one-line append to memory, docs, `AGENTS.md`, `INBOX.md`, `REVIEW.md`, or code), goes to a `worker`, and its acceptance to a verifier. "It is only one line" is not an exception. If you cannot delegate a step, report `BLOCKED`; never do it yourself.
 
 ## Briefs and dispatch
 
