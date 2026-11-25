@@ -16,7 +16,7 @@ The planner picks one per task and records it in the contract. A user instructio
 
 ## Waves
 
-All artifacts go to `plans/<task>/` unless stated, in a folder the task creates under a name not already in use; never write into an existing `plans/` folder. The planner spawns every wave agent itself; wave agents do not spawn agents.
+All artifacts go to `plans/<task>/` unless stated, in a folder the task creates under a name not already in use; never write into an existing `plans/` folder. The planner spawns every wave agent itself, collects each wave with one barrier per `## Turn economy` in `.omp/agents/planner.md`, and appends that wave's `run.log` lines in the same step; wave agents do not spawn agents.
 
 Every agent receives `.omp/RULES.md`, which tells it to read the target repository's `AGENTS.md` and memory; the planner still names the repository in each brief. W2 and W5 reviewers get only their input file as task material, so the information boundary holds.
 
@@ -27,8 +27,8 @@ Every agent receives `.omp/RULES.md`, which tells it to read the target reposito
 | W3 Research synthesis | planner | W1 and W2 files | `research.md` |
 | W4 Design | planner | `research.md`, repo guidance | `contract.md` |
 | W5 Pre-implementation review | ≥2 `reviewer`, parallel, one per review area | `contract.md` only | `w5-<area>.md` |
-| W6 Implementation | one `worker` per slice, sequential within a repository | the slice brief | code, tests, local commit per accepted slice |
-| W7 Close | planner and one worker | everything above | promoted docs, `REVIEW.md` packets, report |
+| W6 Implementation | a fresh planner (see `### Handoff`), one `worker` per slice, sequential within a repository | `contract.md`, `run.log`, the slice brief | code, tests, local commit per accepted slice |
+| W7 Close | the W6 planner and one worker | `contract.md`, `run.log`, slice results | promoted docs, `REVIEW.md` packets, report |
 
 ### W1 Explore
 
@@ -36,7 +36,7 @@ Each scout gets one question and reports what is known (with source), unknown, a
 
 ### W2 Cross-examine
 
-The `reviewer` agent (`.omp/agents/reviewer.md`) labels every factual claim `VERIFIED` (primary source), `UNVERIFIED`, or `DISPUTED` (with the correction and source), lists coverage gaps, and gives `PASS` or `FAIL`. A pass with notes is a `FAIL`; a wrong line number that does not change the claim is only a note. On `FAIL` the planner re-runs that scout once with the gaps; a second `FAIL` carries the gaps into `research.md` as open questions.
+The `reviewer` agent (`.omp/agents/reviewer.md`) labels every factual claim `VERIFIED` (primary source), `UNVERIFIED`, or `DISPUTED` (with the correction and source), lists coverage gaps, and gives `PASS` or `FAIL`. Only a conclusion-changing `DISPUTED` claim or a design-changing gap fails; `UNVERIFIED` claims and minor gaps go into `research.md` as open questions without a re-run. On `FAIL` the planner re-runs that scout once with the failing items only; a second `FAIL` carries them into `research.md` as open questions.
 
 ### W3 Research synthesis
 
@@ -58,6 +58,10 @@ Each reviewer takes one area (for example interfaces, failure behavior, hardware
 - missing knowledge → add W1 scouts for that gap only, then W2, W3, W4, W5.
 
 At most two back-arcs per task. A third failure stops the run: the planner records a held decision with a recommendation for `INBOX.md` and reports `BLOCKED`.
+
+### Handoff
+
+After W5 passes, the design planner ends its run: it appends `W5 done handoff` to `run.log` and returns `HANDOFF` with the path of `contract.md`. Main then assigns a fresh planner for W6 and W7 whose input is `contract.md` and `run.log`, not the research or review files. This keeps research context out of the implementation loop, where it would be re-read on every turn. The W6 planner treats `contract.md` as fixed; a design contradiction it finds goes back to Main, which hands it to a design planner as a W4 steer.
 
 ### W6 Implementation
 

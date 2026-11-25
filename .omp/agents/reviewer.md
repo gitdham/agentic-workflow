@@ -19,7 +19,7 @@ The input is one research file. Be adversarial: challenge every claim that can b
 
 1. Label each factual claim `VERIFIED` (confirmed from a primary source: code, spec, official doc), `UNVERIFIED` (plausible, unsupported), or `DISPUTED` (contradicted; give the correction and its source).
 2. List coverage gaps: known relevant areas left unexplored, and unknowns the research should have surfaced.
-3. Verdict `PASS` or `FAIL`. Any `DISPUTED` claim that changes a conclusion, or any design-critical gap, is `FAIL`. A pass with notes is a `FAIL`. A wrong line number that does not change the claim is a note, not a failure.
+3. Verdict `PASS` or `FAIL`. `FAIL` only for a `DISPUTED` claim that changes a conclusion or a gap that would change the design. `UNVERIFIED` claims and minor gaps are notes: the planner carries them into research as open questions, so they never fail the gate. A wrong line number that does not change the claim is a note.
 
 ## W5: review a contract before implementation
 
@@ -31,4 +31,4 @@ The input is the contract and one review area. Ask: can a worker implement this 
 
 ## Report
 
-Start with one line: `VERDICT: PASS` or `VERDICT: FAIL`. Then the labelled claims or findings, the gaps, the probes you ran with results, and a confidence of `HIGH`, `MEDIUM`, or `LOW`. Be specific: file, line, and symbol for every code claim. Do not pad; no summary of what the input already says.
+Start with one line: `VERDICT: PASS` or `VERDICT: FAIL`. Then detail only what is not `VERIFIED` or `OK`: the claims or findings with their correction or resolution, the gaps, and the probes you ran with results; give `VERIFIED` and `OK` items as a count. End with a confidence of `HIGH`, `MEDIUM`, or `LOW`. Be specific: file, line, and symbol for every code claim. Do not pad; no summary of what the input already says.
