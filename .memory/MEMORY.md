@@ -22,3 +22,10 @@ Learnings about this workspace's own setup: roles, rules, and how the agent runt
 - **Conditions:** W2 and W5 reviews whose brief says "read only <file>".
 - **Evidence:** the W5 interfaces reviewer in a multiwave run reported a probe of the current source, which exposed a defect the contract alone could not show.
 - **Implication:** state the intended read boundary explicitly in each reviewer brief, including whether probing existing code is allowed.
+
+## Collect subagent fan-outs with the eval barrier, not repeated `wait`
+
+- **Finding:** in an omp subagent the `wait` tool returns as each job settles, so collecting N agents costs about N full-context turns; the kernel barrier `wait(handles)` inside one `eval` cell collects them in one turn.
+- **Conditions:** any agent that fans out several subagents (planner waves, reviewer bands).
+- **Evidence:** benchmark with 4 `sonic` children: `task` + repeated `wait` = 5 LLM turns, 44k context tokens; `eval` barrier = 2 turns, 17k. Session archive since 2026-11-14: `wait` turns were 35% of planner cost.
+- **Implication:** collect fan-outs with the eval barrier (now in `.omp/agents/planner.md` `## Turn economy`); measure with `plans/token-eval/usage.py`.
